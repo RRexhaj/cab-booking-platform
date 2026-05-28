@@ -74,7 +74,8 @@ router.get('/current', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const nowLocal = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Malta' }).replace(' ', 'T').slice(0, 16);
+    // Malta is UTC+2 in summer (CEST) — bookings store local Malta time
+    const nowLocal = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
     const snap = await db
       .collection('bookings')
@@ -97,7 +98,8 @@ router.get('/past', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const nowLocal = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Malta' }).replace(' ', 'T').slice(0, 16);
+    // Malta is UTC+2 in summer (CEST) — bookings store local Malta time
+    const nowLocal = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
 
     const snap = await db
       .collection('bookings')
