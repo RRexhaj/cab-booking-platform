@@ -74,16 +74,19 @@ router.get('/current', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const now = new Date().toISOString();
 
     const snap = await db
       .collection('bookings')
       .where('userId', '==', userId)
-      .where('date', '>=', now)
-      .orderBy('date', 'asc')
       .get();
 
-    res.json({ bookings: snap.docs.map(d => d.data()) });
+    const bookings = snap.docs
+      .map(d => d.data())
+      .filter(b => `${b.date}T${b.time}` >= now.slice(0, 16))
+      .sort((a, b) => `${a.date}T${a.time}` > `${b.date}T${b.time}` ? 1 : -1);
+
+    res.json({ bookings });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -94,16 +97,19 @@ router.get('/past', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
 
     const snap = await db
       .collection('bookings')
       .where('userId', '==', userId)
-      .where('date', '<', now)
-      .orderBy('date', 'desc')
       .get();
 
-    res.json({ bookings: snap.docs.map(d => d.data()) });
+    const bookings = snap.docs
+      .map(d => d.data())
+      .filter(b => `${b.date}T${b.time}` < now.slice(0, 16))
+      .sort((a, b) => `${a.date}T${a.time}` < `${b.date}T${b.time}` ? 1 : -1);
+
+    res.json({ bookings });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
