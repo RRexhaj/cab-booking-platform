@@ -4,6 +4,18 @@ import { api } from '../api/client';
 
 const CAB_TYPES = ['Economic', 'Premium', 'Executive'];
 
+function extractFares(data) {
+  const fd = data?.fareData;
+  if (!fd) return [];
+  if (Array.isArray(fd)) return fd.filter(f => f.total_price);
+  if (fd.journey?.fares) {
+    return fd.journey.fares
+      .filter(f => f.price_in_cents !== 'n/a' && f.price_in_cents != null)
+      .map(f => ({ vehicle_type: f.name, total_price: parseFloat((f.price_in_cents / 100).toFixed(2)) }));
+  }
+  return [];
+}
+
 export default function NewBookingPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -43,13 +55,8 @@ export default function NewBookingPage() {
 
       // If we have a fare, process payment immediately
       if (fareData) {
-        // Taxi fare API returns an array of options; grab total_price from the first
-        const fareOptions = fareData.fareData;
-        const baseFare =
-          (Array.isArray(fareOptions) && fareOptions[0]?.total_price) ||
-          fareOptions?.total_price ||
-          fareOptions?.fare ||
-          10;
+        const fares = extractFares(fareData);
+        const baseFare = fares[0]?.total_price || 10;
         await api.post('/api/payments', {
           bookingId: booking.id,
           cabFare: baseFare,
@@ -118,18 +125,19 @@ export default function NewBookingPage() {
           {fareLoading ? 'Estimating…' : 'Get Fare Estimate'}
         </button>
 
-        {fareData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-gray-700">
-            <p className="font-semibold">Fare Estimate</p>
-            {Array.isArray(fareData.fareData)
-            ? fareData.fareData.slice(0, 3).map((opt, i) => (
-                <p key={i}>{opt.vehicle_type ?? `Option ${i + 1}`}: €{opt.total_price}</p>
-              ))
-            : <p>Base fare: €{fareData.fareData?.total_price ?? fareData.fareData?.fare ?? 'N/A'}</p>
-          }
-            <p className="text-xs text-gray-500 mt-1">Final price calculated at payment including cab type, time of day, and passenger multipliers.</p>
-          </div>
-        )}
+        {fareData && (() => {
+          const fares = extractFares(fareData);
+          return (
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-gray-700">
+              <p className="font-semibold">Fare Estimate</p>
+              {fares.length > 0
+                ? fares.map((f, i) => <p key={i}>{f.vehicle_type}: €{f.total_price}</p>)
+                : <p>No fare data available</p>
+              }
+              <p className="text-xs text-gray-500 mt-1">Final price calculated at payment including cab type, time of day, and passenger multipliers.</p>
+            </div>
+          );
+        })()}
 
         <button
           type="submit" disabled={submitting}
