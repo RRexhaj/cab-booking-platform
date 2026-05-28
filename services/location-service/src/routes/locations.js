@@ -67,7 +67,7 @@ router.get('/:id/weather', async (req, res) => {
 
     const { address } = doc.data();
     const response = await fetch(
-      `https://weather-api167.p.rapidapi.com/api/weather/forecast?place=${encodeURIComponent(address)}&cnt=3&units=standard&type=three_hour&mode=json&lang=en`,
+      `https://weather-api167.p.rapidapi.com/api/weather/forecast?place=${encodeURIComponent(address)}&cnt=3&units=metric&type=three_hour&mode=json&lang=en`,
       {
         headers: {
           'x-rapidapi-host': 'weather-api167.p.rapidapi.com',

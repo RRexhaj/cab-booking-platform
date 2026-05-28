@@ -114,7 +114,7 @@ export default function LocationsPage() {
                           {weather[loc.id].list?.slice(0, 3).map((item, i) => (
                             <p key={i}>
                               {new Date(item.dt * 1000).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}:
-                              {' '}{item.weather?.[0]?.description}, {Math.round(item.main?.temp - 273.15)}°C
+                              {' '}{item.weather?.[0]?.description}, {item.main?.temp != null ? Math.round(item.main.temp) : '?'}°C
                             </p>
                           ))}
                         </>
