@@ -3,13 +3,15 @@ const fetch = require('node-fetch');
 
 const router = express.Router();
 
-// Convert a location name to lat/lng using OpenStreetMap Nominatim (free, no key needed)
+// Convert a location name to lat/lng using Photon (free, OSM-based, cloud-friendly)
 async function geocode(location) {
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`;
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(location)}&limit=1`;
   const res = await fetch(url, { headers: { 'User-Agent': 'CabBooking-Assignment/1.0' } });
+  if (!res.ok) throw new Error(`Geocoding failed for "${location}": ${res.status}`);
   const data = await res.json();
-  if (!data.length) throw new Error(`Could not find location: "${location}"`);
-  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  if (!data.features || !data.features.length) throw new Error(`Could not find location: "${location}"`);
+  const [lng, lat] = data.features[0].geometry.coordinates;
+  return { lat, lng };
 }
 
 // GET /fare?from=&to=
