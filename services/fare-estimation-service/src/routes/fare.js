@@ -48,9 +48,17 @@ router.get('/', async (req, res) => {
     let fareData = null;
     if (response.ok) {
       const raw = await response.json();
-      const options = Array.isArray(raw) ? raw : raw?.data || raw?.results || [];
-      if (options.length && options[0]?.total_price) {
-        fareData = options;
+      const journey = raw?.journey;
+      if (journey?.fares?.length) {
+        const parsed = journey.fares
+          .filter(f => f.price_in_cents !== 'n/a' && f.price_in_cents != null)
+          .map(f => ({
+            vehicle_type: f.name,
+            total_price: parseFloat((f.price_in_cents / 100).toFixed(2)),
+            distance_km: journey.distance,
+            duration_min: journey.duration,
+          }));
+        if (parsed.length) fareData = parsed;
       }
     }
 
