@@ -22,7 +22,10 @@ export default function InboxPage() {
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <h2 className="text-xl font-bold text-gray-800">Inbox</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">Inbox</h2>
+        <button onClick={load} className="text-sm text-yellow-700 border border-yellow-400 px-3 py-1 rounded hover:bg-yellow-50 transition">Refresh</button>
+      </div>
       {loading ? (
         <p className="text-gray-400 text-sm">Loading…</p>
       ) : notifications.length === 0 ? (
