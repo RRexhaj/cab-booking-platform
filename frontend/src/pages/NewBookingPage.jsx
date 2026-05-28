@@ -104,7 +104,7 @@ export default function NewBookingPage() {
             type="number" min="1" max="8" required
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
             value={form.passengers}
-            onChange={e => setForm({ ...form, passengers: Number(e.target.value) })}
+            onChange={e => setForm({ ...form, passengers: Math.min(8, Math.max(1, parseInt(e.target.value) || 1)) })}
           />
         </div>
         <div>
@@ -127,6 +127,11 @@ export default function NewBookingPage() {
 
         {fareData && (() => {
           const fares = extractFares(fareData);
+          const baseFare = fares[0]?.total_price || 0;
+          const CAB_MULT = { Economic: 1, Premium: 1.2, Executive: 1.4 };
+          const PAX_MULT = form.passengers <= 4 ? 1 : 2;
+          const cabMult = CAB_MULT[form.cabType] || 1;
+          const estimated = baseFare ? (baseFare * cabMult * PAX_MULT).toFixed(2) : null;
           return (
             <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-gray-700">
               <p className="font-semibold">Fare Estimate</p>
@@ -134,7 +139,12 @@ export default function NewBookingPage() {
                 ? fares.map((f, i) => <p key={i}>{f.vehicle_type}: €{f.total_price}</p>)
                 : <p>No fare data available</p>
               }
-              <p className="text-xs text-gray-500 mt-1">Final price calculated at payment including cab type, time of day, and passenger multipliers.</p>
+              {estimated && (
+                <p className="font-semibold mt-1 text-yellow-800">
+                  Estimated total ({form.cabType}, {form.passengers} pax): €{estimated}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Time-of-day multiplier applied at checkout.</p>
             </div>
           );
         })()}
