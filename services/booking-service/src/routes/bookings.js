@@ -74,7 +74,7 @@ router.get('/current', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const now = new Date().toISOString();
+    const nowLocal = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Malta' }).replace(' ', 'T').slice(0, 16);
 
     const snap = await db
       .collection('bookings')
@@ -83,7 +83,7 @@ router.get('/current', async (req, res) => {
 
     const bookings = snap.docs
       .map(d => d.data())
-      .filter(b => `${b.date}T${b.time}` >= now.slice(0, 16))
+      .filter(b => `${b.date}T${b.time}` >= nowLocal)
       .sort((a, b) => `${a.date}T${a.time}` > `${b.date}T${b.time}` ? 1 : -1);
 
     res.json({ bookings });
@@ -97,7 +97,7 @@ router.get('/past', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
     const db = getDb();
-    const now = new Date().toISOString();
+    const nowLocal = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Malta' }).replace(' ', 'T').slice(0, 16);
 
     const snap = await db
       .collection('bookings')
@@ -106,7 +106,7 @@ router.get('/past', async (req, res) => {
 
     const bookings = snap.docs
       .map(d => d.data())
-      .filter(b => `${b.date}T${b.time}` < now.slice(0, 16))
+      .filter(b => `${b.date}T${b.time}` < nowLocal)
       .sort((a, b) => `${a.date}T${a.time}` < `${b.date}T${b.time}` ? 1 : -1);
 
     res.json({ bookings });
