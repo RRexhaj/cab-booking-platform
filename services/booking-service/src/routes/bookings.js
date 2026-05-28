@@ -48,23 +48,20 @@ router.post('/', async (req, res) => {
     // Emit domain event – listener handles discount notification
     bookingBus.emit('booking.completed', { userId, bookingCount });
 
-    // Task 6: schedule "cab ready" notification via QStash after 3 minutes
-    if (process.env.QSTASH_TOKEN) {
-      const callbackUrl = `${process.env.CUSTOMER_SERVICE_URL}/users/notifications`;
-      await fetch('https://qstash.upstash.io/v2/publish/' + encodeURIComponent(callbackUrl), {
+    // Task 6: schedule "cab ready" notification after 3 minutes
+    const notifUrl = `${process.env.CUSTOMER_SERVICE_URL}/users/notifications`;
+    const notifBody = JSON.stringify({
+      userId,
+      type: 'cab_ready',
+      message: `Your cab is ready! Driver is on the way for your ride from ${startLocation} to ${endLocation}.`,
+    });
+    setTimeout(() => {
+      fetch(notifUrl, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.QSTASH_TOKEN}`,
-          'Content-Type': 'application/json',
-          'Upstash-Delay': '3m',
-        },
-        body: JSON.stringify({
-          userId,
-          type: 'cab_ready',
-          message: `Your cab is ready! Driver is on the way for your ride from ${startLocation} to ${endLocation}.`,
-        }),
-      });
-    }
+        headers: { 'Content-Type': 'application/json' },
+        body: notifBody,
+      }).catch(() => {});
+    }, 3 * 60 * 1000);
 
     res.status(201).json({ booking });
   } catch (err) {
